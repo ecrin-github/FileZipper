@@ -8,7 +8,7 @@ This is largely to make it easier to move the data around, e.g. in the context o
 The system is a console app, (to more easily support being scheduled) and can take takes the following parameters:<br/>
 **-s** followed by a comma separated list of integer ids, each representing a data source, and therefore folder, within the system.<br/>
 **-A**: as a flag. If present, runs through all the sources / folders, and so allows the entire zipping operation to be done at once.<br/>
-**-Z**: zips the json files created by the -F parameter into a series of zip files, with up to 100,000 files in each. This is for ease of transfer to other systems.
+**-Z**: zips the json files created by Aggregation programme into a series of zip files, with up to 100,000 files in each. This is for ease of transfer to other systems.
 
 ### Provenance
 * Author: Steve Canham

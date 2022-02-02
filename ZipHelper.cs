@@ -21,6 +21,8 @@ namespace FileZipper
 
         public int ZipFilesSingleFolder(Source s, string zips_folder_base)
         {
+            if (s.database_name == "test") return 0;
+
             string zip_folder_path = Path.Combine(zips_folder_base, s.database_name);
 
             // check if folder exists, but if folder already exists needs 
@@ -39,26 +41,55 @@ namespace FileZipper
                 Directory.CreateDirectory(zip_folder_path);
             }
 
-            // if folder already exists needs to be emptied
-            
             string[] file_list = Directory.GetFiles(s.local_folder);
             int file_num = file_list.Length;
-            int last_backslash = 0;
+           
+            int files_per_zip = 10000;
+            // int division, usually add 1 for the remainder
+            int zip_files_needed = (file_num % files_per_zip == 0) 
+                                   ? file_num / files_per_zip 
+                                   : (file_num/files_per_zip) + 1;
+            int start_file_num, end_file_num;
+            string start_file, end_file;
 
-            string zip_file_path = Path.Combine(zip_folder_path, s.database_name + " " + today + ".zip");
-            using (ZipArchive zip = ZipFile.Open(zip_file_path, ZipArchiveMode.Create))
+            for (int j = 0; j < zip_files_needed; j++)
             {
-                string source_file_path = "";
-                string entry_name = "";
-                for (int i = 0; i < file_num; i++)
+                start_file_num = (j * files_per_zip);
+                start_file = (start_file_num + 1).ToString();
+
+                if ((j + 1) * files_per_zip >= file_num)
                 {
-                    source_file_path = file_list[i];
-                    last_backslash = source_file_path.LastIndexOf("\\") + 1;
-                    entry_name = source_file_path.Substring(last_backslash);
-                    zip.CreateEntryFromFile(source_file_path, entry_name);
+                    end_file_num = file_num;
                 }
+                else
+                {
+                    end_file_num = (j * files_per_zip) + files_per_zip;
+                }
+                end_file = (end_file_num).ToString();
+
+
+                string file_name = s.database_name + " " + today + " "
+                                          + start_file + " to " + end_file;
+                string zip_file_path = Path.Combine(zip_folder_path, file_name + ".zip");
+
+                using (ZipArchive zip = ZipFile.Open(zip_file_path, ZipArchiveMode.Create))
+                {
+                    int last_backslash = 0;
+                    string source_file_path = "";
+                    string entry_name = "";
+
+                    for (int i = start_file_num; i < end_file_num; i++)
+                    {
+                        source_file_path = file_list[i];
+                        last_backslash = source_file_path.LastIndexOf("\\") + 1;
+                        entry_name = source_file_path.Substring(last_backslash);
+                        zip.CreateEntryFromFile(source_file_path, entry_name);
+                    }
+                }
+
+                logging_repo.LogLine("Zipped " + zip_file_path);
             }
-            logging_repo.LogLine("Zipped " + zip_file_path);
+
             return file_num;
         }
 
@@ -83,36 +114,81 @@ namespace FileZipper
                 Directory.CreateDirectory(zip_folder_path);
             }
 
-            string[] folder_list = Directory.GetDirectories(s.local_folder);
-            string source_folder_path = "";
-            string folder_name = "";
             int file_num = 0;
-            int last_backslash = 0;
+            string[] folder_list = Directory.GetDirectories(s.local_folder);
+            string source_folder_path, folder_name, previous_folder_name, zip_file_path;
+            string source_file_path, entry_name, first_folder, final_zip_name;
+            int folder_backslash, file_backslash;
 
-            for (int j = 0; j < folder_list.Length; j++)
+            // produce a zip for each group of folders
+            // checking that the max size has not been exceeded
+            int folder_num = folder_list.Length;
+            long max_zip_zize = 18 * 1024 * 1024; // 18 MB
+            long zip_file_zize;
+            zip_file_path = ""; first_folder = ""; previous_folder_name = "";
+            bool new_zip_required = false;
+
+            int k = -1;
+            while (k < folder_num)
             {
-                source_folder_path = folder_list[j];
-                last_backslash = source_folder_path.LastIndexOf("\\") + 1;
-                folder_name = source_folder_path.Substring(last_backslash);
+                k++;
+                new_zip_required = false;
 
-                string zip_file_path = Path.Combine(zip_folder_path, s.database_name + " " + today + "-" + folder_name + ".zip");
-                string[] file_list = Directory.GetFiles(source_folder_path);
-                file_num += file_list.Length;
+                // this code run at the beginning and each time inner loop is exited
+                // need to create zip file path using the first folder in this 'batch'
+
+                source_folder_path = folder_list[k];
+                folder_backslash = source_folder_path.LastIndexOf("\\") + 1;
+                folder_name = source_folder_path.Substring(folder_backslash);
+                first_folder = folder_name;
+                zip_file_path = Path.Combine(zip_folder_path, s.database_name + " " +
+                                        today + " " + first_folder + " onwards.zip");
+
+
+                // add the files to the archive, as loing as it stays within the size limit
+                // initial k value is the sme as in the outer loop
 
                 using (ZipArchive zip = ZipFile.Open(zip_file_path, ZipArchiveMode.Create))
                 {
-                    string source_file_path = "";
-                    for (int i = 0; i < file_list.Length; i++)
+
+                    while (k < folder_num && !new_zip_required)
                     {
-                        string entry_name = "";
-                        source_file_path = file_list[i];
-                        last_backslash = source_file_path.LastIndexOf("\\") + 1;
-                        entry_name = source_file_path.Substring(last_backslash);
-                        zip.CreateEntryFromFile(source_file_path, entry_name);
+                        source_folder_path = folder_list[k];
+                        folder_backslash = source_folder_path.LastIndexOf("\\") + 1;
+                        folder_name = source_folder_path.Substring(folder_backslash);
+                        previous_folder_name = folder_name;
+
+                        string[] file_list = Directory.GetFiles(source_folder_path);
+                        {
+                            for (int i = 0; i < file_list.Length; i++)
+                            {
+                                source_file_path = file_list[i];
+                                file_backslash = source_file_path.LastIndexOf("\\");
+                                entry_name = source_file_path.Substring(file_backslash);
+                                zip.CreateEntryFromFile(source_file_path, entry_name);
+                            }
+                        }
+                        file_num += file_list.Length;
+                        logging_repo.LogLine("Zipped " + folder_name);
+
+                        zip_file_zize = new FileInfo(zip_file_path).Length;
+                        new_zip_required = (zip_file_zize > max_zip_zize);
+
+                        if (!new_zip_required)
+                        {
+                            k++;
+                        }
                     }
                 }
-                logging_repo.LogLine("Zipped " + zip_file_path);
+
+                // rename the zip file that has just been completed
+                final_zip_name = Path.Combine(zip_folder_path, s.database_name + " " +
+                                             today + " " + first_folder + " to " + previous_folder_name + ".zip");
+
+                File.Move(zip_file_path, final_zip_name);
+
             }
+
             return file_num;
         }
     }

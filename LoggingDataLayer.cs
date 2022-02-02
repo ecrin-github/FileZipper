@@ -19,6 +19,8 @@ namespace FileZipper
         private string study_JSON_folder;
         private string object_JSON_folder;
         private string zips_folder;
+        private string study_JSON_zips_folder;
+        private string object_JSON_zips_folder;
 
         /// <summary>
         /// Parameterless constructor is used to automatically build
@@ -45,13 +47,16 @@ namespace FileZipper
             study_JSON_folder = settings["study json folder"];
             object_JSON_folder = settings["object json folder"];
             zips_folder = settings["zips folder"];
-
+            study_JSON_zips_folder = settings["study json zips folder"];
+            object_JSON_zips_folder = settings["object json zips folder"];
         }
 
         public Source SourceParameters => source;
         public string StudyJSONFolder => study_JSON_folder;
         public string ObjectJSONFolder => object_JSON_folder;
         public string ZipsFolder => zips_folder;
+        public string StudyJSONZipsFolder => study_JSON_zips_folder;
+        public string ObjectJSONZipsFolder => object_JSON_zips_folder;
 
         public void OpenLogFile(IEnumerable<int> source_ids, bool all_sources, bool zip_json)
         {

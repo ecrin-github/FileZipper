@@ -1,7 +1,8 @@
 {
   "profiles": {
     "FileZipper": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "commandLineArgs": "-A"
     }
   }
 }

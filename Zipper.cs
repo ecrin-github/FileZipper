@@ -42,10 +42,7 @@ namespace FileZipper
             }
             else if (opts.zip_json)
             {
-                foreach (int source_id in opts.source_ids)
-                {
-                    ZipJSONFiles();
-                }
+                //ZipJSONFiles();
             }
 
             logging_repo.CloseLog();

@@ -8,7 +8,8 @@ namespace FileZipper
 {
     class JSONHelper
     {
-        string folder_path, file_path, folder_base;
+        string folder_base, zip_folder_base;
+        string folder_path, file_path;
         string[] folder_list;
         int number_zip_files_needed;
         string today;
@@ -24,6 +25,7 @@ namespace FileZipper
         public void ZipStudyFiles()
         {
             folder_base = logging_repo.StudyJSONFolder;
+            zip_folder_base = logging_repo.StudyJSONZipsFolder;
             folder_list = Directory.GetDirectories(folder_base);
 
             // Batch size of 10 folders, each of about 10,000 records - each zip therefore 100,000 files
@@ -58,7 +60,7 @@ namespace FileZipper
                 }
                 string file_num_suffix = " [" + file_num.ToString() + " files]";
 
-                string zip_file_path = Path.Combine(folder_base, "study ids " +
+                string zip_file_path = Path.Combine(zip_folder_base, "study ids " +
                                             zip_file_suffix + file_num_suffix + ".zip");
                 using (ZipArchive zip = ZipFile.Open(zip_file_path, ZipArchiveMode.Create))
                 {
@@ -84,6 +86,7 @@ namespace FileZipper
         public void ZipObjectFiles()
         {
             folder_base = logging_repo.ObjectJSONFolder;
+            zip_folder_base = logging_repo.ObjectJSONZipsFolder;
             folder_list = Directory.GetDirectories(folder_base);
 
             // Batch size of 10 folders, each of about 10,000 records - each zip therefore 100,000 files
@@ -118,7 +121,7 @@ namespace FileZipper
                 }
                 string file_num_suffix = " [" + file_num.ToString() + " files]";
 
-                string zip_file_path = Path.Combine(folder_base, "object ids " +
+                string zip_file_path = Path.Combine(zip_folder_base, "object ids " +
                                             zip_file_suffix + file_num_suffix + ".zip");
                 using (ZipArchive zip = ZipFile.Open(zip_file_path, ZipArchiveMode.Create))
                 {

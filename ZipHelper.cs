@@ -122,16 +122,25 @@ namespace FileZipper
 
             // produce a zip for each group of folders
             // checking that the max size has not been exceeded
-            int folder_num = folder_list.Length;
-            long max_zip_zize = 18 * 1024 * 1024; // 18 MB
-            long zip_file_zize;
-            zip_file_path = ""; first_folder = ""; previous_folder_name = "";
-            bool new_zip_required = false;
+            // after each folder
+            int folder_num = folder_list.Length;      // total folders in source directory
+            long max_zip_zize = 18 * 1024 * 1024;     // 18 MB
+            long zip_file_zize;                       // Used for current legth of current zip file    
+            zip_file_path = "";                       // Used for current zip
+            first_folder = ""; previous_folder_name = "";
+            bool new_zip_required = false;            // set true if current file size greater than max size
 
-            int k = -1;
+            int k = -1;                               // k is the index of the source folders in the source directory
             while (k < folder_num)
             {
                 k++;
+
+                // if the very last folder called the file size to be exceeded
+                // k now equals hew total folder number and 
+                //  there is no need for an additional zip file
+
+                if (k == folder_num) break;
+
                 new_zip_required = false;
 
                 // this code run at the beginning and each time inner loop is exited
@@ -145,7 +154,7 @@ namespace FileZipper
                                         today + " " + first_folder + " onwards.zip");
 
 
-                // add the files to the archive, as loing as it stays within the size limit
+                // add the files to the archive, as long as it stays within the size limit
                 // initial k value is the sme as in the outer loop
 
                 using (ZipArchive zip = ZipFile.Open(zip_file_path, ZipArchiveMode.Create))
@@ -172,8 +181,10 @@ namespace FileZipper
                         logging_repo.LogLine("Zipped " + folder_name);
 
                         zip_file_zize = new FileInfo(zip_file_path).Length;
-                        new_zip_required = (zip_file_zize > max_zip_zize);
 
+                        // A new zip file may be required
+                        new_zip_required = zip_file_zize > max_zip_zize;
+                                          
                         if (!new_zip_required)
                         {
                             k++;

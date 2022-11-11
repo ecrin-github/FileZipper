@@ -61,7 +61,7 @@ namespace FileZipper
         public void OpenLogFile(IEnumerable<int> source_ids, bool all_sources, bool zip_json)
         {
             string dt_string = DateTime.Now.ToString("s", System.Globalization.CultureInfo.InvariantCulture)
-                              .Replace("-", "").Replace(":", "").Replace("T", " ");
+                              .Replace(":", "").Replace("T", " ");
             string zip_type = "";
             if (all_sources)
             {
